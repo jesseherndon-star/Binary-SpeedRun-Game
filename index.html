@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+  window.__app_id = 'binary-speed-run';
+  window.__firebase_config = JSON.stringify({
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  });
+</script>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Speed Run - Classroom Game</title>
+    <!-- Use Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+            min-height: 100vh;
+            color: #f8fafc;
+        }
+
+        .mono-font {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        .kahoot-btn-red { background-color: #e21b3c; }
+        .kahoot-btn-blue { background-color: #1368ce; }
+        .kahoot-btn-yellow { background-color: #d89e00; }
+        .kahoot-btn-green { background-color: #26890c; }
+        .kahoot-btn-purple { background-color: #864cbf; }
+
+        .glow-effect {
+            box-shadow: 0 0 25px rgba(168, 85, 247, 0.4);
+        }
+
+        .bit-toggle {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            touch-action: manipulation;
+        }
+
+        .bit-toggle.active {
+            background-color: #10b981;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .pulse-anim {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen justify-between overflow-x-hidden">
+
+    <header class="w-full bg-slate-900/80 backdrop-blur-md border-b border-slate-800 px-6 py-4 flex items-center justify-between z-10">
+        <div class="flex items-center gap-3 cursor-pointer" onclick="app.resetToHome()">
+            <div class="bg-gradient-to-tr from-purple-600 to-indigo-500 p-2.5 rounded-xl text-white shadow-lg flex items-center justify-center">
+                <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M7 16l-4-4 4-4m10 0l4 4-4 4M14 4l-4 16"/></svg>
+            </div>
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-400 to-indigo-300">
+                    BINARY RUN
+                </h1>
+                <p class="text-xs text-slate-400 font-medium">Live Multi-Device Classroom Challenge</p>
+            </div>
+        </div>
+
+        <div id="session-badge" class="hidden flex items-center gap-3 bg-slate-800/80 border border-slate-700 px-4 py-1.5 rounded-full">
+            <span class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Game PIN:</span>
+            <span id="display-game-pin" class="text-lg font-bold mono-font text-yellow-400 tracking-widest">---</span>
+            <button onclick="app.copyGameLink()" class="ml-2 text-slate-400 hover:text-white transition" title="Copy Invite Link">
+                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center p-4 md:p-8">
+
+        <!-- Home View -->
+        <div id="view-home" class="w-full max-w-xl text-center space-y-8">
+            <div class="space-y-3">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-sm font-medium mb-2">
+                    <svg class="w-4 h-4 fill-yellow-400" viewBox="0 0 24 24"><path d="M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0011 15.9V18H9v2h6v-2h-2v-2.1c1.95-.37 3.5-1.93 3.86-3.9A5.01 5.01 0 0021 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z"/></svg>
+                    Live Cloud Sync Across Any Device
+                </div>
+                <h2 class="text-4xl md:text-5xl font-extrabold tracking-tight text-white">
+                    Master Binary in <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">Real-Time</span>
+                </h2>
+                <p class="text-slate-300 text-base md:text-lg">
+                    Host a dynamic classroom game where students race on their phones, tablets, or computers!
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+                <button onclick="app.showView('view-join')" class="kahoot-btn-purple text-white p-6 rounded-2xl shadow-xl hover:brightness-110 active:scale-95 transition flex flex-col items-center justify-center gap-3 group border border-purple-400/30">
+                    <div class="bg-white/20 p-4 rounded-full group-hover:scale-110 transition">
+                        <svg class="w-8 h-8 fill-current" viewBox="0 0 24 24"><path d="M21 6H3c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-10 7H9v2H8v-2H6v-1h2V10h1v2h2v1zm4.5 1c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm3-3c-.83 0-1.5-.67-1.5-1.5S17.67 8 18.5 8s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                    </div>
+                    <span class="text-2xl font-bold">Join Game</span>
+                    <span class="text-xs text-purple-200">Enter a 6-digit Game PIN</span>
+                </button>
+
+                <button onclick="app.showHostSetup()" class="kahoot-btn-blue text-white p-6 rounded-2xl shadow-xl hover:brightness-110 active:scale-95 transition flex flex-col items-center justify-center gap-3 group border border-blue-400/30">
+                    <div class="bg-white/20 p-4 rounded-full group-hover:scale-110 transition">
+                        <svg class="w-8 h-8 fill-current" viewBox="0 0 24 24"><path d="M20 18c1.1 0 1.99-.9 1.99-2L22 5c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 5h16v11H4V5z"/></svg>
+                    </div>
+                    <span class="text-2xl font-bold">Host Game</span>
+                    <span class="text-xs text-blue-200">Create session for your class</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Join View -->
+        <div id="view-join" class="hidden w-full max-w-md bg-slate-800/80 backdrop-blur-xl border border-slate-700 p-8 rounded-3xl shadow-2xl space-y-6">
+            <div class="text-center space-y-2">
+                <h3 class="text-3xl font-bold text-white">Enter the Arena</h3>
+                <p class="text-slate-400 text-sm">Get ready to show off your binary speed!</p>
+            </div>
+
+            <form onsubmit="app.handleJoinSession(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Game PIN</label>
+                    <input type="text" id="join-pin" placeholder="e.g. 849201" maxlength="6" required 
+                           class="w-full text-center text-3xl font-bold tracking-widest mono-font py-3.5 bg-slate-900 border border-slate-700 rounded-xl text-yellow-400 focus:outline-none focus:border-purple-500 uppercase">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2">Your Nickname</label>
+                    <input type="text" id="join-nickname" placeholder="ByteNinja" maxlength="15" required 
+                           class="w-full text-center text-xl font-bold py-3.5 bg-slate-900 border border-slate-700 rounded-xl text-white focus:outline-none focus:border-purple-500">
+                </div>
+
+                <button type="submit" id="btn-join-submit" class="w-full py-4 kahoot-btn-green rounded-xl text-white font-bold text-xl shadow-lg hover:brightness-110 active:scale-95 transition">
+                    Ready to Play!
+                </button>
+            </form>
+
+            <div class="text-center">
+                <button onclick="app.showView('view-home')" class="text-slate-400 hover:text-white text-sm inline-flex items-center gap-1">
+                    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg> Back to Main Menu
+                </button>
+            </div>
+        </div>
+
+        <!-- Host Setup View -->
+        <div id="view-host-setup" class="hidden w-full max-w-lg bg-slate-800/80 backdrop-blur-xl border border-slate-700 p-8 rounded-3xl shadow-2xl space-y-6">
+            <div class="text-center space-y-2">
+                <h3 class="text-3xl font-bold text-white">Host New Game</h3>
+                <p class="text-slate-400 text-sm">Configure parameters for your student challenge</p>
+            </div>
+
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Difficulty / Bit Range</label>
+                    <select id="host-difficulty" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white font-medium focus:outline-none focus:border-purple-500">
+                        <option value="4">4-Bit (Numbers 0 to 15) - Beginners</option>
+                        <option value="6" selected>6-Bit (Numbers 0 to 63) - Intermediate</option>
+                        <option value="8">8-Bit (Numbers 0 to 255) - Advanced</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Time Per Round</label>
+                    <select id="host-timer" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white font-medium focus:outline-none focus:border-purple-500">
+                        <option value="15">15 Seconds (Lightning)</option>
+                        <option value="30" selected>30 Seconds (Standard)</option>
+                        <option value="45">45 Seconds (Relaxed)</option>
+                        <option value="60">60 Seconds (Beginners)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-300 mb-2">Total Rounds</label>
+                    <select id="host-rounds" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white font-medium focus:outline-none focus:border-purple-500">
+                        <option value="5">5 Rounds</option>
+                        <option value="10" selected>10 Rounds</option>
+                        <option value="15">15 Rounds</option>
+                    </select>
+                </div>
+
+                <button onclick="app.createSession()" class="w-full py-4 kahoot-btn-blue rounded-xl text-white font-bold text-xl shadow-lg hover:brightness-110 active:scale-95 transition">
+                    Launch Lobby
+                </button>
+
+                <div class="text-center">
+                    <button onclick="app.showView('view-home')" class="text-slate-400 hover:text-white text-sm inline-flex items-center gap-1">
+                        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg> Back
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Host Lobby View -->
+        <div id="view-host-lobby" class="hidden w-full max-w-4xl text-center space-y-8">
+            <div class="bg-slate-800/80 backdrop-blur-xl border border-slate-700 p-8 rounded-3xl shadow-2xl space-y-6">
+                <span class="px-4 py-1.5 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 text-sm font-bold uppercase tracking-wider">
+                    Game Lobby Open (Cloud Multi-Device Enabled)
+                </span>
+                
+                <div class="space-y-2">
+                    <p class="text-slate-400 text-sm font-semibold uppercase">Join with Game PIN:</p>
+                    <div class="text-6xl md:text-8xl font-extrabold mono-font text-yellow-400 tracking-widest glow-effect py-2 inline-block px-8 bg-slate-900/90 rounded-2xl border-2 border-yellow-500/50">
+                        <span id="lobby-pin">------</span>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex items-center justify-center gap-4">
+                    <div class="text-slate-300 text-lg">
+                        Joined Players: <span id="lobby-player-count" class="font-bold text-purple-400 text-2xl">0</span>
+                    </div>
+                </div>
+
+                <div id="lobby-players-grid" class="flex flex-wrap items-center justify-center gap-3 max-h-60 overflow-y-auto p-4 bg-slate-900/50 rounded-2xl border border-slate-800">
+                    <span class="text-slate-500 italic">Waiting for students to connect...</span>
+                </div>
+
+                <button id="btn-start-game" onclick="app.startHostGame()" disabled class="w-full md:w-2/3 py-5 kahoot-btn-green rounded-2xl text-white font-extrabold text-2xl shadow-2xl hover:brightness-110 active:scale-95 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                    Start Game Now
+                </button>
+            </div>
+        </div>
+
+        <!-- Player Waiting Lobby View -->
+        <div id="view-player-waiting" class="hidden w-full max-w-md text-center bg-slate-800/80 backdrop-blur-xl border border-slate-700 p-8 rounded-3xl shadow-2xl space-y-6">
+            <div class="pulse-anim">
+                <div class="w-20 h-20 bg-purple-600/30 border-2 border-purple-500 text-purple-300 rounded-full flex items-center justify-center mx-auto">
+                    <svg class="w-10 h-10 fill-current" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                </div>
+            </div>
+            <div>
+                <h3 class="text-2xl font-bold text-white">You're connected!</h3>
+                <p class="text-slate-300 text-sm mt-1">See your nickname on the host screen?</p>
+            </div>
+            <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-700">
+                <span class="text-xs text-slate-400 uppercase tracking-widest block">Logged in as</span>
+                <span id="player-nickname-display" class="text-2xl font-bold text-purple-400">---</span>
+            </div>
+            <p class="text-xs text-slate-400 animate-pulse">Waiting for host to start the round...</p>
+        </div>
+
+        <!-- Host Game Screen -->
+        <div id="view-host-game" class="hidden w-full max-w-4xl space-y-6">
+            <div class="flex items-center justify-between bg-slate-800/80 border border-slate-700 p-4 rounded-2xl">
+                <div>
+                    <span class="text-xs text-slate-400 uppercase">Round</span>
+                    <div id="host-round-number" class="text-2xl font-bold text-purple-400">1 / 10</div>
+                </div>
+                <div class="text-center">
+                    <span class="text-xs text-slate-400 uppercase">Timer</span>
+                    <div id="host-timer-display" class="text-4xl font-extrabold text-yellow-400 mono-font">30</div>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs text-slate-400 uppercase">Submissions</span>
+                    <div id="host-submissions-count" class="text-2xl font-bold text-green-400">0 / 0</div>
+                </div>
+            </div>
+
+            <div class="bg-slate-800/90 border-2 border-purple-500/50 rounded-3xl p-8 md:p-12 text-center shadow-2xl relative overflow-hidden">
+                <span class="text-sm uppercase tracking-widest font-bold text-purple-300 bg-purple-900/50 px-4 py-1 rounded-full border border-purple-500/30">
+                    Convert To Binary
+                </span>
+                <div class="my-6">
+                    <span id="host-target-decimal" class="text-7xl md:text-9xl font-extrabold text-white tracking-tight mono-font drop-shadow-lg">
+                        0
+                    </span>
+                </div>
+                <p class="text-slate-400 text-sm">Students are converting this decimal number right now!</p>
+            </div>
+
+            <div class="bg-slate-800/60 border border-slate-700 p-6 rounded-2xl">
+                <h4 class="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
+                    ⚡ Answered This Round
+                </h4>
+                <div id="host-submitted-list" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <button id="btn-force-end-round" onclick="app.endRound()" class="w-full py-3 bg-red-600/80 hover:bg-red-600 text-white font-bold rounded-xl transition">
+                End Round Early
+            </button>
+        </div>
+
+        <!-- Player Game Screen -->
+        <div id="view-player-game" class="hidden w-full max-w-lg space-y-6">
+            <div class="flex items-center justify-between bg-slate-800/80 border border-slate-700 p-4 rounded-2xl">
+                <span id="player-round-badge" class="text-sm font-bold text-purple-400">Round 1</span>
+                <div id="player-timer-display" class="text-2xl font-bold text-yellow-400 mono-font">30s</div>
+                <div id="player-score-badge" class="text-sm font-bold text-green-400">0 pts</div>
+            </div>
+
+            <div class="bg-slate-800/90 border border-slate-700 rounded-3xl p-6 text-center space-y-4">
+                <span class="text-xs text-slate-400 uppercase tracking-widest font-semibold">Target Decimal</span>
+                <div id="player-target-decimal" class="text-6xl font-extrabold text-white mono-font">0</div>
+            </div>
+
+            <div class="bg-slate-800/90 border border-slate-700 rounded-3xl p-6 space-y-6">
+                <div class="text-center text-xs text-slate-400 uppercase font-semibold">
+                    Toggle Bits (Click/Tap to Flip 0 and 1)
+                </div>
+
+                <div id="bit-switches-container" class="grid grid-cols-4 md:grid-cols-6 gap-2 md:gap-3 justify-center"></div>
+
+                <div class="bg-slate-900 p-4 rounded-2xl border border-slate-700/80 text-center space-y-1">
+                    <span class="text-xs text-slate-500 uppercase font-bold tracking-wider">Your Binary Output</span>
+                    <div id="player-binary-preview" class="text-3xl font-extrabold mono-font text-yellow-400 tracking-widest">
+                        000000
+                    </div>
+                    <div class="text-xs text-slate-400">
+                        Equals Decimal: <span id="player-binary-decimal-val" class="text-white font-bold">0</span>
+                    </div>
+                </div>
+
+                <button id="btn-submit-answer" onclick="app.submitPlayerAnswer()" class="w-full py-4 kahoot-btn-green text-white font-bold text-xl rounded-2xl shadow-xl hover:brightness-110 active:scale-95 transition">
+                    Submit Answer
+                </button>
+            </div>
+        </div>
+
+        <!-- Player Feedback Screen -->
+        <div id="view-player-feedback" class="hidden w-full max-w-md text-center bg-slate-800/90 border border-slate-700 p-8 rounded-3xl shadow-2xl space-y-6">
+            <div id="feedback-icon-box" class="w-24 h-24 mx-auto rounded-full flex items-center justify-center text-5xl border-4">
+                <span id="feedback-icon">✓</span>
+            </div>
+
+            <div>
+                <h3 id="feedback-title" class="text-3xl font-extrabold text-white">Correct!</h3>
+                <p id="feedback-subtitle" class="text-slate-300 text-sm mt-1">+1000 Points</p>
+            </div>
+
+            <div id="feedback-speed-bonus" class="hidden inline-block bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 px-4 py-1.5 rounded-full text-xs font-bold">
+                ⚡ Speed Bonus Applied!
+            </div>
+
+            <div class="bg-slate-900 p-4 rounded-2xl border border-slate-800 text-left space-y-2 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Target Decimal:</span>
+                    <span id="fb-target-dec" class="font-bold text-white mono-font">0</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Correct Binary:</span>
+                    <span id="fb-target-bin" class="font-bold text-emerald-400 mono-font">0000</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-slate-400">Your Answer:</span>
+                    <span id="fb-your-bin" class="font-bold text-yellow-400 mono-font">0000</span>
+                </div>
+            </div>
+
+            <p class="text-xs text-slate-400 animate-pulse">Waiting for round leaderboard on host screen...</p>
+        </div>
+
+        <!-- Host Scoreboard View -->
+        <div id="view-host-scoreboard" class="hidden w-full max-w-3xl bg-slate-800/90 border border-slate-700 p-8 rounded-3xl shadow-2xl space-y-6">
+            <div class="text-center space-y-2">
+                <span class="text-xs uppercase tracking-widest text-purple-400 font-bold">Round Standings</span>
+                <h3 class="text-4xl font-extrabold text-white">Leaderboard</h3>
+            </div>
+
+            <div id="leaderboard-list" class="space-y-3 max-h-96 overflow-y-auto pr-1"></div>
+
+            <button id="btn-next-round" onclick="app.nextRoundOrFinish()" class="w-full py-4 kahoot-btn-blue text-white font-extrabold text-xl rounded-2xl shadow-xl hover:brightness-110 active:scale-95 transition">
+                Next Round
+            </button>
+        </div>
+
+        <!-- Final Podium View -->
+        <div id="view-final-podium" class="hidden w-full max-w-3xl text-center space-y-8">
+            <div class="space-y-2">
+                <div class="inline-block p-4 bg-yellow-500/20 border border-yellow-500/40 rounded-full text-yellow-400 text-4xl mb-2">
+                    👑
+                </div>
+                <h2 class="text-5xl font-extrabold text-white">Game Completed!</h2>
+                <p class="text-slate-300">Congratulations to our binary speed masters!</p>
+            </div>
+
+            <div id="podium-container" class="flex items-end justify-center gap-4 pt-8 pb-4 min-h-[250px]"></div>
+
+            <div class="bg-slate-800/80 border border-slate-700 p-6 rounded-3xl text-left space-y-3">
+                <h4 class="text-lg font-bold text-white mb-2">Final Scores</h4>
+                <div id="final-scores-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
+            </div>
+
+            <button onclick="app.resetToHome()" class="px-8 py-4 kahoot-btn-purple text-white font-bold text-xl rounded-2xl shadow-xl hover:brightness-110 transition">
+                Back to Main Menu
+            </button>
+        </div>
+
+    </main>
+
+    <footer class="w-full text-center py-4 text-xs text-slate-500 border-t border-slate-800/60 bg-slate-900/40">
+        Binary Speed Run &bull; Interactive Real-Time Computer Science Classroom Tool
+    </footer>
+
+    <div id="toast-modal" class="fixed bottom-6 right-6 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-slate-800 border border-purple-500/50 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 z-50">
+        <span id="toast-icon" class="text-purple-400 text-xl">ℹ</span>
+        <span id="toast-message" class="text-sm font-semibold">Message text</span>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, updateDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'binary-speed-run-app';
+        let db = null;
+        let auth = null;
+        let isCloudAvailable = false;
+
+        try {
+            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                const firebaseConfig = JSON.parse(__firebase_config);
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                isCloudAvailable = true;
+            }
+        } catch (err) {
+            console.warn("Firestore initialization fallback enabled.", err);
+            isCloudAvailable = false;
+        }
+
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) {
+                        this.ctx = new AudioContext();
+                    }
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playTone(freq, type = 'sine', duration = 0.15, gainVal = 0.1) {
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch(e) {}
+            }
+
+            playBitClick() { this.playTone(600, 'triangle', 0.05, 0.15); }
+            playCorrectSound() {
+                this.playTone(523.25, 'sine', 0.1, 0.2);
+                setTimeout(() => this.playTone(659.25, 'sine', 0.1, 0.2), 100);
+                setTimeout(() => this.playTone(783.99, 'sine', 0.2, 0.2), 200);
+            }
+            playIncorrectSound() {
+                this.playTone(220, 'sawtooth', 0.2, 0.15);
+                setTimeout(() => this.playTone(180, 'sawtooth', 0.3, 0.15), 150);
+            }
+            playCountdownBeep() { this.playTone(880, 'sine', 0.08, 0.1); }
+            playFinishFanfare() {
+                const notes = [440, 554.37, 659.25, 880];
+                notes.forEach((note, idx) => {
+                    setTimeout(() => this.playTone(note, 'triangle', 0.3, 0.2), idx * 150);
+                });
+            }
+        }
+
+        class BroadcastSync {
+            constructor(onMessage) {
+                this.channel = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('binary_run_bus') : null;
+                if (this.channel) {
+                    this.channel.onmessage = (e) => onMessage(e.data);
+                }
+                window.addEventListener('storage', (e) => {
+                    if (e.key && e.key.startsWith('binary_game_')) {
+                        try {
+                            const parsed = JSON.parse(e.newValue);
+                            onMessage({ pin: e.key.replace('binary_game_', ''), session: parsed });
+                        } catch(err) {}
+                    }
+                });
+            }
+
+            send(data) {
+                if (this.channel) {
+                    this.channel.postMessage(data);
+                }
+            }
+        }
+
+        class BinaryGameApp {
+            constructor() {
+                this.sounds = new SoundEngine();
+                
+                this.role = null;
+                this.pin = null;
+                this.nickname = null;
+                this.playerId = null;
+                
+                this.bitCount = 6;
+                this.timerSecs = 30;
+                this.totalRounds = 10;
+                
+                this.sessionData = {
+                    status: 'lobby',
+                    currentRound: 0,
+                    targetDecimal: 0,
+                    roundStartTime: 0,
+                    players: {},
+                    answers: {}
+                };
+
+                this.userBits = [];
+                this.timerInterval = null;
+                this.pollInterval = null;
+                this.unsubscribeCloud = null;
+
+                this.broadcast = new BroadcastSync((msg) => {
+                    if (msg && msg.pin === this.pin && msg.session) {
+                        const oldStatus = this.sessionData.status;
+                        const oldRound = this.sessionData.currentRound;
+                        this.sessionData = msg.session;
+                        
+                        if (this.role === 'host') {
+                            this.updateHostLobbyUI();
+                            this.updateHostLiveSubmissionsUI();
+                        } else if (this.role === 'player') {
+                            this.handlePlayerStateSync(oldStatus, oldRound);
+                        }
+                    }
+                });
+
+                this.initApp();
+            }
+
+            initApp() {
+                try {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const pinParam = urlParams.get('pin');
+                    if (pinParam) {
+                        document.getElementById('join-pin').value = pinParam;
+                        this.showView('view-join');
+                    }
+                } catch(e) {}
+            }
+
+            showView(viewId) {
+                const views = [
+                    'view-home', 'view-join', 'view-host-setup', 'view-host-lobby',
+                    'view-player-waiting', 'view-host-game', 'view-player-game',
+                    'view-player-feedback', 'view-host-scoreboard', 'view-final-podium'
+                ];
+                
+                views.forEach(v => {
+                    const el = document.getElementById(v);
+                    if (el) el.classList.add('hidden');
+                });
+
+                const target = document.getElementById(viewId);
+                if (target) target.classList.remove('hidden');
+
+                const badge = document.getElementById('session-badge');
+                if (this.pin && this.role) {
+                    badge.classList.remove('hidden');
+                    document.getElementById('display-game-pin').innerText = this.pin;
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+
+            showToast(msg) {
+                const toast = document.getElementById('toast-modal');
+                document.getElementById('toast-message').innerText = msg;
+                
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('translate-y-20', 'opacity-0');
+                }, 3000);
+            }
+
+            generatePin() {
+                return Math.floor(100000 + Math.random() * 900000).toString();
+            }
+
+            getLocalSession(pin) {
+                try {
+                    const data = localStorage.getItem(`binary_game_${pin}`);
+                    return data ? JSON.parse(data) : null;
+                } catch (e) {
+                    return this.sessionData;
+                }
+            }
+
+            async saveLocalSession(broadcast = true) {
+                if (this.pin && this.sessionData) {
+                    try {
+                        localStorage.setItem(`binary_game_${this.pin}`, JSON.stringify(this.sessionData));
+                    } catch (e) {}
+
+                    if (broadcast) {
+                        this.broadcast.send({ pin: this.pin, session: this.sessionData });
+                    }
+
+                    if (isCloudAvailable && db) {
+                        try {
+                            const sessionRef = doc(db, 'artifacts', appId, 'public', 'data', 'game_sessions', this.pin);
+                            await setDoc(sessionRef, {
+                                pin: this.pin,
+                                sessionData: JSON.stringify(this.sessionData),
+                                updatedAt: Date.now()
+                            }, { merge: true });
+                        } catch(err) {
+                            console.warn("Cloud save failed, falling back to local sync.", err);
+                        }
+                    }
+                }
+            }
+
+            subscribeCloudSession() {
+                if (!isCloudAvailable || !db || !this.pin) return;
+
+                if (this.unsubscribeCloud) this.unsubscribeCloud();
+
+                const sessionRef = doc(db, 'artifacts', appId, 'public', 'data', 'game_sessions', this.pin);
+                this.unsubscribeCloud = onSnapshot(sessionRef, (snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.data();
+                        if (data && data.sessionData) {
+                            try {
+                                const parsed = JSON.parse(data.sessionData);
+                                const oldStatus = this.sessionData.status;
+                                const oldRound = this.sessionData.currentRound;
+
+                                this.sessionData = parsed;
+                                try {
+                                    localStorage.setItem(`binary_game_${this.pin}`, JSON.stringify(this.sessionData));
+                                } catch (e) {}
+
+                                if (this.role === 'host') {
+                                    this.updateHostLobbyUI();
+                                    this.updateHostLiveSubmissionsUI();
+                                } else if (this.role === 'player') {
+                                    this.handlePlayerStateSync(oldStatus, oldRound);
+                                }
+                            } catch(e) {}
+                        }
+                    }
+                }, (err) => {
+                    console.warn("Cloud listener error:", err);
+                });
+            }
+
+            showHostSetup() {
+                this.showView('view-host-setup');
+            }
+
+            async createSession() {
+                this.sounds.init();
+                this.role = 'host';
+                this.pin = this.generatePin();
+                this.bitCount = parseInt(document.getElementById('host-difficulty').value);
+                this.timerSecs = parseInt(document.getElementById('host-timer').value);
+                this.totalRounds = parseInt(document.getElementById('host-rounds').value);
+
+                this.sessionData = {
+                    pin: this.pin,
+                    status: 'lobby',
+                    bitCount: this.bitCount,
+                    timerSecs: this.timerSecs,
+                    totalRounds: this.totalRounds,
+                    currentRound: 0,
+                    targetDecimal: 0,
+                    roundStartTime: 0,
+                    players: {},
+                    answers: {}
+                };
+
+                await this.saveLocalSession();
+                this.subscribeCloudSession();
+
+                document.getElementById('lobby-pin').innerText = this.pin;
+                this.showView('view-host-lobby');
+
+                this.startSessionSync();
+            }
+
+            async handleJoinSession(e) {
+                e.preventDefault();
+                this.sounds.init();
+
+                const pin = document.getElementById('join-pin').value.trim();
+                const nickname = document.getElementById('join-nickname').value.trim();
+
+                if (!pin || pin.length !== 6) {
+                    this.showToast('Please enter a valid 6-digit Game PIN');
+                    return;
+                }
+
+                if (!nickname) {
+                    this.showToast('Please enter a nickname');
+                    return;
+                }
+
+                this.role = 'player';
+                this.pin = pin;
+                this.nickname = nickname;
+                this.playerId = 'player_' + Math.random().toString(36).substr(2, 9);
+
+                // Fetch existing session state from local or cloud
+                let session = this.getLocalSession(pin);
+                if (isCloudAvailable && db) {
+                    try {
+                        const ref = doc(db, 'artifacts', appId, 'public', 'data', 'game_sessions', pin);
+                        const snap = await getDoc(ref);
+                        if (snap.exists() && snap.data().sessionData) {
+                            session = JSON.parse(snap.data().sessionData);
+                        }
+                    } catch(err) {}
+                }
+
+                if (!session) {
+                    session = {
+                        pin: pin,
+                        status: 'lobby',
+                        bitCount: 6,
+                        timerSecs: 30,
+                        totalRounds: 10,
+                        currentRound: 0,
+                        targetDecimal: 0,
+                        players: {},
+                        answers: {}
+                    };
+                }
+
+                if (!session.players) session.players = {};
+                session.players[this.playerId] = {
+                    id: this.playerId,
+                    name: nickname,
+                    score: 0
+                };
+
+                this.sessionData = session;
+                await this.saveLocalSession();
+                this.subscribeCloudSession();
+
+                document.getElementById('player-nickname-display').innerText = nickname;
+                this.showView('view-player-waiting');
+
+                this.startSessionSync();
+            }
+
+            startSessionSync() {
+                if (this.pollInterval) clearInterval(this.pollInterval);
+
+                this.pollInterval = setInterval(() => {
+                    const latest = this.getLocalSession(this.pin);
+                    if (!latest) return;
+
+                    const oldStatus = this.sessionData.status;
+                    const oldRound = this.sessionData.currentRound;
+
+                    // Sync local session cache
+                    if (JSON.stringify(latest) !== JSON.stringify(this.sessionData)) {
+                        this.sessionData = latest;
+                        if (this.role === 'host') {
+                            this.updateHostLobbyUI();
+                            this.updateHostLiveSubmissionsUI();
+                        } else if (this.role === 'player') {
+                            this.handlePlayerStateSync(oldStatus, oldRound);
+                        }
+                    }
+                }, 300);
+            }
+
+            updateHostLobbyUI() {
+                const players = Object.values(this.sessionData.players || {});
+                document.getElementById('lobby-player-count').innerText = players.length;
+
+                const grid = document.getElementById('lobby-players-grid');
+                if (players.length === 0) {
+                    grid.innerHTML = `<span class="text-slate-500 italic">Waiting for students to connect...</span>`;
+                    document.getElementById('btn-start-game').disabled = true;
+                } else {
+                    grid.innerHTML = players.map(p => `
+                        <span class="bg-purple-600/30 border border-purple-500/50 text-purple-200 px-4 py-2 rounded-xl text-lg font-bold flex items-center gap-2">
+                            👤 ${p.name}
+                        </span>
+                    `).join('');
+                    document.getElementById('btn-start-game').disabled = false;
+                }
+            }
+
+            updateHostLiveSubmissionsUI() {
+                if (this.sessionData.status !== 'active') return;
+
+                const totalPlayers = Object.keys(this.sessionData.players || {}).length;
+                const roundAnswers = (this.sessionData.answers && this.sessionData.answers[this.sessionData.currentRound]) || {};
+                const countSubmitted = Object.keys(roundAnswers).length;
+
+                document.getElementById('host-submissions-count').innerText = `${countSubmitted} / ${totalPlayers}`;
+
+                const feed = document.getElementById('host-submitted-list');
+                if (feed) {
+                    feed.innerHTML = Object.values(roundAnswers).map(ans => `
+                        <span class="bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 px-3 py-1 rounded-lg text-sm font-bold flex items-center gap-1">
+                            ✓ ${ans.nickname}
+                        </span>
+                    `).join('');
+                }
+
+                if (totalPlayers > 0 && countSubmitted >= totalPlayers) {
+                    this.endRound();
+                }
+            }
+
+            handlePlayerStateSync(oldStatus, oldRound) {
+                const status = this.sessionData.status;
+                const round = this.sessionData.currentRound;
+
+                if (status === 'active' && (oldStatus !== 'active' || round !== oldRound)) {
+                    this.setupPlayerRound();
+                } else if (status === 'round_ended' && oldStatus !== 'round_ended') {
+                    this.showPlayerFeedback();
+                } else if (status === 'finished') {
+                    this.showFinalPodium();
+                }
+            }
+
+            startHostGame() {
+                this.sessionData.status = 'active';
+                this.sessionData.currentRound = 1;
+                this.startNewRound();
+            }
+
+            async startNewRound() {
+                const maxVal = Math.pow(2, this.sessionData.bitCount) - 1;
+                const target = Math.floor(Math.random() * maxVal) + 1;
+
+                this.sessionData.targetDecimal = target;
+                this.sessionData.status = 'active';
+                this.sessionData.roundStartTime = Date.now();
+                if (!this.sessionData.answers) this.sessionData.answers = {};
+                this.sessionData.answers[this.sessionData.currentRound] = {};
+
+                await this.saveLocalSession();
+
+                document.getElementById('host-round-number').innerText = `${this.sessionData.currentRound} / ${this.sessionData.totalRounds}`;
+                document.getElementById('host-target-decimal').innerText = target;
+                document.getElementById('host-submitted-list').innerHTML = '';
+
+                this.showView('view-host-game');
+                this.startTimestampTimer(this.sessionData.timerSecs, () => this.endRound());
+            }
+
+            startTimestampTimer(totalSeconds, onComplete) {
+                if (this.timerInterval) clearInterval(this.timerInterval);
+
+                const startTime = this.sessionData.roundStartTime || Date.now();
+
+                const updateDisplays = () => {
+                    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                    const timeLeft = Math.max(0, totalSeconds - elapsed);
+
+                    if (this.role === 'host') {
+                        document.getElementById('host-timer-display').innerText = timeLeft;
+                    }
+                    if (document.getElementById('player-timer-display')) {
+                        document.getElementById('player-timer-display').innerText = `${timeLeft}s`;
+                    }
+
+                    if (timeLeft <= 5 && timeLeft > 0 && this.role === 'host') {
+                        this.sounds.playCountdownBeep();
+                    }
+
+                    if (timeLeft <= 0) {
+                        clearInterval(this.timerInterval);
+                        if (onComplete && this.role === 'host') onComplete();
+                    }
+                };
+
+                updateDisplays();
+                this.timerInterval = setInterval(updateDisplays, 500);
+            }
+
+            setupPlayerRound() {
+                this.showView('view-player-game');
+
+                const bitCount = this.sessionData.bitCount;
+                this.userBits = new Array(bitCount).fill(0);
+
+                document.getElementById('player-round-badge').innerText = `Round ${this.sessionData.currentRound} of ${this.sessionData.totalRounds}`;
+                document.getElementById('player-target-decimal').innerText = this.sessionData.targetDecimal;
+                document.getElementById('player-score-badge').innerText = `${this.sessionData.players[this.playerId]?.score || 0} pts`;
+
+                const container = document.getElementById('bit-switches-container');
+                container.innerHTML = '';
+
+                for (let i = 0; i < bitCount; i++) {
+                    const bitPlaceVal = Math.pow(2, bitCount - 1 - i);
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.id = `bit-btn-${i}`;
+                    btn.className = `bit-toggle bg-slate-900 border border-slate-700 py-4 px-2 rounded-2xl flex flex-col items-center gap-1 text-white hover:border-purple-500`;
+                    btn.onclick = () => this.toggleBit(i);
+
+                    btn.innerHTML = `
+                        <span class="text-xs text-slate-400 mono-font font-bold">${bitPlaceVal}</span>
+                        <span id="bit-val-${i}" class="text-3xl font-extrabold mono-font text-slate-300">0</span>
+                    `;
+                    container.appendChild(btn);
+                }
+
+                this.updateBinaryPreview();
+                const submitBtn = document.getElementById('btn-submit-answer');
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+                this.startTimestampTimer(this.sessionData.timerSecs, null);
+            }
+
+            toggleBit(index) {
+                this.sounds.playBitClick();
+                this.userBits[index] = this.userBits[index] === 0 ? 1 : 0;
+
+                const btn = document.getElementById(`bit-btn-${index}`);
+                const valSpan = document.getElementById(`bit-val-${index}`);
+
+                if (this.userBits[index] === 1) {
+                    btn.classList.add('active');
+                    valSpan.innerText = '1';
+                    valSpan.classList.remove('text-slate-300');
+                    valSpan.classList.add('text-white');
+                } else {
+                    btn.classList.remove('active');
+                    valSpan.innerText = '0';
+                    valSpan.classList.add('text-slate-300');
+                    valSpan.classList.remove('text-white');
+                }
+
+                this.updateBinaryPreview();
+            }
+
+            updateBinaryPreview() {
+                const binStr = this.userBits.join('');
+                const decVal = parseInt(binStr, 2) || 0;
+
+                document.getElementById('player-binary-preview').innerText = binStr;
+                document.getElementById('player-binary-decimal-val').innerText = decVal;
+            }
+
+            async submitPlayerAnswer() {
+                const userBin = this.userBits.join('');
+                const userDec = parseInt(userBin, 2);
+                const isCorrect = userDec === this.sessionData.targetDecimal;
+                const timeTaken = Math.max(0.1, (Date.now() - this.sessionData.roundStartTime) / 1000);
+
+                const submitBtn = document.getElementById('btn-submit-answer');
+                submitBtn.disabled = true;
+                submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+                const session = this.getLocalSession(this.pin) || this.sessionData;
+                if (!session.answers) session.answers = {};
+                if (!session.answers[session.currentRound]) {
+                    session.answers[session.currentRound] = {};
+                }
+
+                session.answers[session.currentRound][this.playerId] = {
+                    playerId: this.playerId,
+                    nickname: this.nickname,
+                    binaryAnswer: userBin,
+                    isCorrect: isCorrect,
+                    timeTaken: timeTaken
+                };
+
+                this.sessionData = session;
+                await this.saveLocalSession();
+                this.showPlayerFeedback(isCorrect, userBin);
+            }
+
+            showPlayerFeedback(isCorrectOverride, userBinOverride) {
+                this.showView('view-player-feedback');
+
+                const roundAnswers = (this.sessionData.answers && this.sessionData.answers[this.sessionData.currentRound]) || {};
+                const myAns = roundAnswers[this.playerId] || {
+                    isCorrect: isCorrectOverride || false,
+                    binaryAnswer: userBinOverride || this.userBits.join(''),
+                    timeTaken: 10
+                };
+
+                const targetDec = this.sessionData.targetDecimal;
+                const targetBin = targetDec.toString(2).padStart(this.sessionData.bitCount, '0');
+
+                const iconBox = document.getElementById('feedback-icon-box');
+                const icon = document.getElementById('feedback-icon');
+                const title = document.getElementById('feedback-title');
+                const subtitle = document.getElementById('feedback-subtitle');
+                const speedBonus = document.getElementById('feedback-speed-bonus');
+
+                document.getElementById('fb-target-dec').innerText = targetDec;
+                document.getElementById('fb-target-bin').innerText = targetBin;
+                document.getElementById('fb-your-bin').innerText = myAns.binaryAnswer;
+
+                if (myAns.isCorrect) {
+                    this.sounds.playCorrectSound();
+                    iconBox.className = "w-24 h-24 mx-auto rounded-full flex items-center justify-center text-5xl border-4 bg-emerald-500/20 border-emerald-500 text-emerald-400";
+                    icon.innerText = "✓";
+                    title.innerText = "Correct!";
+                    title.className = "text-3xl font-extrabold text-emerald-400";
+                    subtitle.innerText = "Great speed and accuracy!";
+
+                    if (myAns.timeTaken < 5) {
+                        speedBonus.classList.remove('hidden');
+                    } else {
+                        speedBonus.classList.add('hidden');
+                    }
+                } else {
+                    this.sounds.playIncorrectSound();
+                    iconBox.className = "w-24 h-24 mx-auto rounded-full flex items-center justify-center text-5xl border-4 bg-red-500/20 border-red-500 text-red-400";
+                    icon.innerText = "✕";
+                    title.innerText = "Incorrect";
+                    title.className = "text-3xl font-extrabold text-red-400";
+                    subtitle.innerText = "Keep going! Precision is key.";
+                    speedBonus.classList.add('hidden');
+                }
+            }
+
+            async endRound() {
+                if (this.timerInterval) clearInterval(this.timerInterval);
+
+                const session = this.getLocalSession(this.pin) || this.sessionData;
+                session.status = 'round_ended';
+
+                const roundAnswers = (session.answers && session.answers[session.currentRound]) || {};
+                const correctSubmissions = Object.values(roundAnswers)
+                    .filter(a => a.isCorrect)
+                    .sort((a, b) => a.timeTaken - b.timeTaken);
+
+                correctSubmissions.forEach((ans, index) => {
+                    const basePoints = 1000;
+                    const speedBonus = Math.max(0, Math.floor(500 - ans.timeTaken * 15));
+                    const rankBonus = index === 0 ? 300 : index === 1 ? 150 : 0;
+                    const totalRoundPts = basePoints + speedBonus + rankBonus;
+
+                    if (session.players[ans.playerId]) {
+                        session.players[ans.playerId].score = (session.players[ans.playerId].score || 0) + totalRoundPts;
+                    }
+                });
+
+                this.sessionData = session;
+                await this.saveLocalSession();
+
+                this.showHostScoreboard();
+            }
+
+            showHostScoreboard() {
+                this.showView('view-host-scoreboard');
+
+                const players = Object.values(this.sessionData.players || {})
+                    .sort((a, b) => b.score - a.score);
+
+                const container = document.getElementById('leaderboard-list');
+                container.innerHTML = players.map((p, idx) => {
+                    const rank = idx + 1;
+                    let rankBg = "bg-slate-900 border-slate-700";
+                    let crown = "";
+
+                    if (rank === 1) {
+                        rankBg = "bg-yellow-500/10 border-yellow-500/50";
+                        crown = `👑 `;
+                    } else if (rank === 2) {
+                        rankBg = "bg-slate-300/10 border-slate-400/50";
+                    } else if (rank === 3) {
+                        rankBg = "bg-amber-600/10 border-amber-600/50";
+                    }
+
+                    return `
+                        <div class="flex items-center justify-between p-4 rounded-2xl border ${rankBg} transition">
+                            <div class="flex items-center gap-4">
+                                <span class="text-xl font-bold text-slate-400 w-6">#${rank}</span>
+                                <span class="text-xl font-bold text-white">${crown}${p.name}</span>
+                            </div>
+                            <span class="text-2xl font-extrabold text-purple-400 mono-font">${p.score} pts</span>
+                        </div>
+                    `;
+                }).join('');
+
+                const nextBtn = document.getElementById('btn-next-round');
+                if (this.sessionData.currentRound >= this.sessionData.totalRounds) {
+                    nextBtn.innerText = `See Final Victory Podium 🏆`;
+                } else {
+                    nextBtn.innerText = `Next Round (${this.sessionData.currentRound + 1}/${this.sessionData.totalRounds})`;
+                }
+            }
+
+            nextRoundOrFinish() {
+                if (this.sessionData.currentRound >= this.sessionData.totalRounds) {
+                    this.finishGame();
+                } else {
+                    this.sessionData.currentRound += 1;
+                    this.startNewRound();
+                }
+            }
+
+            async finishGame() {
+                this.sessionData.status = 'finished';
+                await this.saveLocalSession();
+                this.showFinalPodium();
+            }
+
+            showFinalPodium() {
+                this.sounds.playFinishFanfare();
+
+                this.showView('view-final-podium');
+
+                const sorted = Object.values(this.sessionData.players || {})
+                    .sort((a, b) => b.score - a.score);
+
+                const podiumBox = document.getElementById('podium-container');
+                podiumBox.innerHTML = '';
+
+                const first = sorted[0];
+                const second = sorted[1];
+                const third = sorted[2];
+
+                let html = '';
+
+                if (second) {
+                    html += `
+                        <div class="flex flex-col items-center flex-1">
+                            <span class="text-sm font-bold text-slate-300 mb-1">${second.name}</span>
+                            <span class="text-xs text-purple-300 font-bold mb-2">${second.score} pts</span>
+                            <div class="w-full bg-slate-700 h-32 rounded-t-2xl flex items-center justify-center border-t-4 border-slate-400">
+                                <span class="text-3xl font-extrabold text-slate-300">2</span>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (first) {
+                    html += `
+                        <div class="flex flex-col items-center flex-1">
+                            <span class="text-2xl mb-1">👑</span>
+                            <span class="text-lg font-bold text-yellow-300 mb-1">${first.name}</span>
+                            <span class="text-xs text-yellow-400 font-bold mb-2">${first.score} pts</span>
+                            <div class="w-full bg-yellow-600/40 h-44 rounded-t-2xl flex items-center justify-center border-t-4 border-yellow-400">
+                                <span class="text-4xl font-extrabold text-yellow-300">1</span>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (third) {
+                    html += `
+                        <div class="flex flex-col items-center flex-1">
+                            <span class="text-sm font-bold text-amber-500 mb-1">${third.name}</span>
+                            <span class="text-xs text-amber-400 font-bold mb-2">${third.score} pts</span>
+                            <div class="w-full bg-amber-800/40 h-24 rounded-t-2xl flex items-center justify-center border-t-4 border-amber-600">
+                                <span class="text-2xl font-extrabold text-amber-500">3</span>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                podiumBox.innerHTML = html;
+
+                const scoresList = document.getElementById('final-scores-list');
+                scoresList.innerHTML = sorted.map((p, idx) => `
+                    <div class="flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-800 text-sm">
+                        <span class="font-semibold text-slate-300">#${idx + 1} ${p.name}</span>
+                        <span class="font-bold text-yellow-400 mono-font">${p.score} pts</span>
+                    </div>
+                `).join('');
+            }
+
+            copyGameLink() {
+                const url = `${window.location.origin}${window.location.pathname}?pin=${this.pin}`;
+                const dummy = document.createElement('input');
+                document.body.appendChild(dummy);
+                dummy.value = url;
+                dummy.select();
+                try {
+                    document.execCommand('copy');
+                    this.showToast('Direct Game Link Copied to Clipboard!');
+                } catch(e) {
+                    this.showToast('Game PIN: ' + this.pin);
+                }
+                document.body.removeChild(dummy);
+            }
+
+            resetToHome() {
+                if (this.timerInterval) clearInterval(this.timerInterval);
+                if (this.pollInterval) clearInterval(this.pollInterval);
+                if (this.unsubscribeCloud) this.unsubscribeCloud();
+                this.role = null;
+                this.pin = null;
+                this.showView('view-home');
+            }
+        }
+
+        let app;
+        window.addEventListener('DOMContentLoaded', () => {
+            app = new BinaryGameApp();
+            window.app = app;
+        });
+    </script>
+</body>
+</html>
